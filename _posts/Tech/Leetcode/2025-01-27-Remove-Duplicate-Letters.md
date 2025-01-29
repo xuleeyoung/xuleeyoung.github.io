@@ -13,6 +13,8 @@ Given a string `s`, remove duplicate letters so that every letter appears once a
 
 ## Solution
 
+Hash table, Monotonic stack
+
 ```python
 class Solution:
     def removeDuplicateLetters(self, s: str) -> str:
