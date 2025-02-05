@@ -146,3 +146,156 @@ print(tokenizer.decode(outputs[0]))
 
 
 
+### Transformers Source Code Structure
+
+The `transformers` library consists of the following major components:
+
+| Component           | Description                                                  |
+| ------------------- | ------------------------------------------------------------ |
+| **`models/`**       | Implements different Transformer architectures (e.g., BERT, GPT, T5, LLaMA) |
+| **`tokenization/`** | Handles text tokenization and special tokens (e.g., `[CLS]`, `[SEP]`) |
+| **`modeling/`**     | Contains the Transformer models (PyTorch & TensorFlow implementations) |
+| **`trainer/`**      | Handles training & fine-tuning using `Trainer` API           |
+| **`generation/`**   | Implements text generation algorithms (beam search, sampling, etc.) |
+| **`pipelines/`**    | Provides easy-to-use APIs for inference (e.g., `pipeline("text-generation")`) |
+
+The `transformers` library is built around **four main classes**:
+
+1. **`PreTrainedModel`** (Model Class) → Loads pre-trained weights and defines architectures
+2. **`PreTrainedTokenizer`** (Tokenizer Class) → Handles tokenization, padding, and special tokens
+3. **`Trainer`** (Training Class) → Simplifies training and fine-tuning
+4. **`Pipeline`** (Inference API) → High-level API for model inference
+
+```sql
++---------------------+
+| PreTrainedModel    | <----- Defines Model Architecture (BERT, GPT, T5)
++---------------------+
+        |
+        v
++---------------------+
+| AutoModel          | <----- Loads Any Pre-Trained Model
++---------------------+
+        |
+        v
++---------------------+
+| Specific Models    | <----- e.g., BertModel, GPT2Model, T5ForConditionalGeneration
++---------------------+
+
++----------------------+
+| PreTrainedTokenizer | <----- Handles tokenization
++----------------------+
+        |
+        v
++----------------------+
+| AutoTokenizer       | <----- Loads Tokenizer for Any Model
++----------------------+
+        |
+        v
++----------------------+
+| Specific Tokenizers | <----- e.g., BertTokenizer, GPT2Tokenizer
++----------------------+
+
++-------------------+
+| Trainer          | <----- High-Level Training API
++-------------------+
+
++-------------------+
+| Pipeline         | <----- High-Level Inference API
++-------------------+
+
+```
+
+**Key Classes**:
+
+###### Model Class(PreTrainedModel):
+
+- This is the **base class** for all Transformer models.
+
+- It defines methods for **loading, saving, and configuring models**.
+
+- Every specific model (like `BertModel`, `GPT2Model`) **inherits from this**.
+
+ **Key Model Variants**:
+
+| Class                           | Description                                      |
+| ------------------------------- | ------------------------------------------------ |
+| `BertModel`                     | Basic BERT encoder (without classification head) |
+| `BertForSequenceClassification` | BERT with a classification head                  |
+| `GPT2Model`                     | GPT-2 decoder (without LM head)                  |
+| `GPT2LMHeadModel`               | GPT-2 with a language modeling head              |
+| `T5ForConditionalGeneration`    | T5 model for text-to-text generation             |
+
+###### Tokenizer Class(PreTrainedTokenizer):
+
+- Handles **text tokenization** for transformer models.
+
+- Converts text into token IDs and manages **padding, truncation, and special tokens**.
+
+- Each model has its own tokenizer (`BertTokenizer`, `GPT2Tokenizer`, etc.).
+
+
+
+###### Trainer
+
+###### Pipeline
+
+#### Case Study: Parameter/API of GPT2Model
+
+class transformers.GPT2Model: 
+
+```python
+def forward(
+	self,
+  input_ids: Optional[torch.LongTensor] = None,
+  past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
+  attention_mask: Optional[torch.FloatTensor] = None,
+  token_type_ids: Optional[torch.LongTensor] = None,
+  position_ids: Optional[torch.LongTensor] = None,
+  head_mask: Optional[torch.FloatTensor] = None,
+  inputs_embeds: Optional[torch.FloatTensor] = None,
+  encoder_hidden_states: Optional[torch.Tensor] = None,
+  encoder_attention_mask: Optional[torch.FloatTensor] = None,
+  use_cache: Optional[bool] = None,
+  output_attentions: Optional[bool] = None,
+  output_hidden_states: Optional[bool] = None,
+  return_dict: Optional[bool] = None,
+)
+```
+
+output of forward has the fields:
+
+- **last_hidden_state** (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`) — Sequence of hidden-states at the output of the last layer of the model.
+
+  If `past_key_values` is used only the last hidden-state of the sequences of shape `(batch_size, 1, hidden_size)` is output.
+
+- **past_key_values** (`tuple(tuple(torch.FloatTensor))`, *optional*, returned when `use_cache=True` is passed or when `config.use_cache=True`) — Tuple of `tuple(torch.FloatTensor)` of length `config.n_layers`, with each tuple having 2 tensors of shape `(batch_size, num_heads, sequence_length, embed_size_per_head)`) and optionally if `config.is_encoder_decoder=True` 2 additional tensors of shape `(batch_size, num_heads, encoder_sequence_length, embed_size_per_head)`.
+
+  Contains pre-computed hidden-states (key and values in the self-attention blocks and optionally if `config.is_encoder_decoder=True` in the cross-attention blocks) that can be used (see `past_key_values` input) to speed up sequential decoding.
+
+- **hidden_states** (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`) — Tuple of `torch.FloatTensor` (one for the output of the embeddings, if the model has an embedding layer, + one for the output of each layer) of shape `(batch_size, sequence_length, hidden_size)`.
+
+  Hidden-states of the model at the output of each layer plus the optional initial embedding outputs.
+
+- **attentions** (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`) — Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length, sequence_length)`.
+
+  Attentions weights after the attention softmax, used to compute the weighted average in the self-attention heads.
+
+- **cross_attentions** (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` and `config.add_cross_attention=True` is passed or when `config.output_attentions=True`) — Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length, sequence_length)`.
+
+class transformers.GPT2LMHeadModel:
+
+The GPT2 Model transformer with a language modeling head on top (linear layer with weights tied to the input embeddings).
+
+forward method has the same input types as GPT2Model, with a plus of `labels`.
+
+output has the same fields as GPT2Model and additionally:
+
+- **loss** (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided) — Language modeling loss (for next-token prediction).
+- **logits** (`torch.FloatTensor` of shape `(batch_size, sequence_length, config.vocab_size)`) — Prediction scores of the language modeling head (scores for each vocabulary token before SoftMax).
+
+
+
+
+
+
+
