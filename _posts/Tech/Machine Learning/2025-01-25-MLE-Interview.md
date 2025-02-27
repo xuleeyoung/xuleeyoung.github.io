@@ -44,6 +44,55 @@ Overfitting is a situation that the model fits too well on the training data, bu
 - RMSProp: Avoid AdaGrad's diminishing learning rate problem.
 - Adam: Combines Momentum and RMSProp.
 
+```python
+import numpy as np
+
+# 目标函数和梯度
+def f(x):
+    return x**2 - 1  # 目标函数
+
+def gradient(x):
+    return 2 * x  # 梯度 f'(x)
+
+# Adam 参数
+learning_rate = 0.1  # 初始学习率
+beta1 = 0.9  # 一阶动量衰减系数
+beta2 = 0.999  # 二阶动量衰减系数
+epsilon = 1e-8  # 防止除零
+max_iterations = 100  # 最大迭代次数
+tolerance = 1e-6  # 收敛阈值
+
+# 初始化
+x = np.random.randn()  # 随机初始化 x
+m, v = 0, 0  # 初始化动量
+t = 0  # 计数器
+
+# Adam 迭代
+for t in range(1, max_iterations + 1):
+    grad = gradient(x)  # 计算梯度
+    m = beta1 * m + (1 - beta1) * grad  # 更新一阶动量
+    v = beta2 * v + (1 - beta2) * (grad ** 2)  # 更新二阶动量
+
+    # 计算偏差修正
+    m_hat = m / (1 - beta1 ** t)
+    v_hat = v / (1 - beta2 ** t)
+
+    # Adam 更新
+    x_new = x - learning_rate * m_hat / (np.sqrt(v_hat) + epsilon)
+
+    # 收敛判断
+    if abs(x_new - x) < tolerance:
+        break
+
+    x = x_new  # 更新 x
+
+# 输出结果
+print(f"最小值 x ≈ {x:.6f}, 对应 f(x) ≈ {f(x):.6f}")
+
+```
+
+
+
 #### 6. Loss functions and their derivations?
 
 - MSE: Regression. Gaussian noise model
