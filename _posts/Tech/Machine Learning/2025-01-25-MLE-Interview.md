@@ -33,6 +33,8 @@ Overfitting is a situation that the model fits too well on the training data, bu
 5. Drop-out/early stop/pruning
 6. Ensemble method: Bagging/Boosting
 
+**Dropout**: 训练时，以概率p随机丢弃神经元，等价于数据增强，类似于集成学习的bagging思想，每次随机选择部分特征，增强模型泛化能力。预测时，计算所有神经元，把神经元的权重乘p(训练时的输出期望)
+
 #### 5. Optimization method?
 
 - Gradient Descent: 
@@ -425,6 +427,15 @@ Batch normalization is a technique used to improve and accelerate the training i
 
 It normalize the input for each layer over one batch to make training more stable and efficient.
 
-It reduces the internal covariance shift, which refers to the change in distribution of layer inputs during training. 
+It reduces the internal covariance shift, which refers to the change in distribution of layer inputs during training. 激活函数会改变各层数据的分布，并且随着网络加深影响越明显。
+
+**加入缩放和平移变量的原因是：保证每一次数据经过归一化后还保留原有学习来的特征，同时又能完成归一化操作，加速训练。**
+
+训练时：计算mini-batch的均值和方差，并维护一个指数移动平均值；
+
+预测时：使用训练时计算的指数移动平均作为均值和方差，等价于在整个训练集上归一化。
 
 #### 14. Why residual networks work?
+
+
+
