@@ -401,6 +401,12 @@ def compute_accuracy(X_test: np.ndarray,
 - F-1 score: harmonic mean of precision and recall.
 - ROC-AUC: 
 
+如何解决正负样本不平衡：
+
+1. 数据层面：过采样/欠采样，负样本采样(采样概率正比于点击次数的0.75次方)
+2. 算法层面：Focal loss, 减少多数类的梯度贡献
+3. 调整阈值：降低阈值，提高召回率
+
 #### 9. Activation functions?
 
 - Sigmoid
@@ -436,6 +442,153 @@ It reduces the internal covariance shift, which refers to the change in distribu
 预测时：使用训练时计算的指数移动平均作为均值和方差，等价于在整个训练集上归一化。
 
 #### 14. Why residual networks work?
+
+
+
+#### 15. PyTorch框架
+
+```python
+# 加载数据集，数据预处理
+
+# 定义模型
+class MLP(nn.Module):
+    def __init__(self):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(28*28, 128)  # 第一层，输入28x28像素展平
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(128, 10)  # 输出10个类别（0-9）
+    
+    def forward(self, x):
+        x = x.view(x.size(0), -1)  # 展平成 [batch_size, 784]
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        return x
+
+# 初始化模型
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = MLP().to(device)
+
+# 交叉熵损失
+criterion = nn.CrossEntropyLoss()
+
+# Adam 优化器
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+num_epochs = 5  # 训练轮数
+
+for epoch in range(num_epochs):
+    model.train()  # 设置为训练模式
+    running_loss = 0.0
+    
+    for images, labels in train_loader:
+        images, labels = images.to(device), labels.to(device)  # 移动到 GPU（如果可用）
+
+        # 前向传播
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+
+        # 反向传播
+        optimizer.zero_grad()  # 清空梯度
+        loss.backward()  # 计算梯度
+        optimizer.step()  # 更新权重
+
+        running_loss += loss.item()
+    
+    print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_loader):.4f}")
+
+print("训练完成！")
+
+```
+
+#### 16. 神经网络初始化
+
+为什么神经网络不能全部初始化为0？隐藏层每个神经元激活值相同，反向传播梯度也相同，所以所有神经元等价于（退化成）一个相同的神经元，学不到不同的特征
+
+1. Random Uniform/Normal 容易梯度消失/爆炸 Embedding层
+2. Xavier：normal，方差2/(n_in + n_out), Linear层
+3. Kaiming：normal，方差2/n_in
+
+
+
+#### 17.特征选择方法
+
+1. 基于模型：XGBoost利用模型训练过程中的weight(特征分裂次数), gain(特征分裂的信息增益)判断特征重要性
+2. Filter：基于统计量过滤特征，方差，卡方检验，相关系数
+3. Wrapper：递归特征消除(RFE)
+4. 模型本身Lasso回归，L1正则化
+5. GBDT+LR
+
+
+
+#### 18.重排算法
+
+1. Learning to rank
+2. 多目标融合，加权打分融合，accuracy，diversity，coverage
+3. 多样性重排，MMR
+4. 强化学习/上下文多臂赌博机
+
+
+
+#### 19.召回长尾问题
+
+1. 多目标优化，引入coverage loss，loss热度权重惩罚，多样性正则项
+2. 训练数据采样：热门物品欠采样正样本，过采样负样本，冷门物品loss更高权重
+3. 重排
+
+
+
+#### 20. LTR
+
+1. Pointwise:每个样本是一个user-item pair，CTR预估，输出点击概率
+2. Pairwise：对同一个user构造一对样本，目标是学出对正样本打分和负样本打分差异，RankNet/BPR，-log(sigmoid(f(i) - f(j)))
+3. Listwise：关注整个列表，直接优化列表排序指标NDCG；LambdaRank用NDCG差值加权RankNet梯度
+
+
+
+#### 21.排序/召回指标
+
+排序：
+
+1. 准确率/召回率
+2. hit rate
+3. AUC
+4. MAP
+5. NDCG
+
+
+
+召回：Recall@K, Hit Rate@K, Precision@K, MAP, MRR, 用户/物品覆盖率，多样性
+
+
+
+#### 21. 冷启动
+
+用户：
+
+利用用户注册基本信息，寻找与其背景相似的老用户的embedding；
+
+初始化推荐
+
+全站热门+新品
+
+物品：
+
+生成模型
+
+
+
+#### 22.自适应loss权重
+
+1. DWA：loss下降速度
+2. DTP：KPI
+3. GradNorm
+
+
+
+
+
+
 
 
 
