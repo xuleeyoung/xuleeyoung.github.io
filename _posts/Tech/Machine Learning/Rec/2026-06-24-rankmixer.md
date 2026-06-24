@@ -8,3 +8,6 @@ math: true
 ---
 
 #### RankMixer Model
+
+![image-20260624232958712](assets/images/rankmixer.png)
+
