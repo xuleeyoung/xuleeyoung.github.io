@@ -6,3 +6,5 @@ tags: [rec, machine learning]     # TAG names should always be lowercase
 description: Some basic MLE interview questions with short answers.
 math: true
 ---
+
+#### RankMixer Model
